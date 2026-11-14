@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nak Ai</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0f172a;
+        }
+
+        /* ផ្ទាំង Background វីដេអូ ឬ រូបភាព */
+        #bgVideo, #bgImage {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -1;
+            object-fit: cover;
+        }
+
+        /* ប្រអប់ Chat ថ្លាដូចកញ្ចក់ */
+        .chat-container {
+            width: 92%;
+            max-width: 450px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 18px;
+            border-radius: 22px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+            display: flex;
+            flex-direction: column;
+            height: 85vh;
+            max-height: 680px;
+        }
+
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+            padding-bottom: 10px;
+        }
+
+        .header-flex h3 {
+            margin: 0;
+            font-size: 20px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            backdrop-filter: blur(5px);
+            transition: 0.2s;
+        }
+        .glass-btn:hover { background: rgba(255, 255, 255, 0.35); }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .message {
+            padding: 10px 14px;
+            border-radius: 14px;
+            max-width: 82%;
+            word-wrap: break-word;
+            font-size: 14.5px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .user-msg {
+            background: rgba(0, 123, 255, 0.75);
+            backdrop-filter: blur(5px);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .ai-msg {
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(5px);
+            color: #fff;
+            align-self: flex-start;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-bottom-left-radius: 4px;
+        }
+
+        .input-group { display: flex; gap: 8px; }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 14px;
+            outline: none;
+            color: white;
+            font-size: 14px;
+        }
+        input[type="text"]::placeholder { color: rgba(255, 255, 255, 0.75); }
+
+        /* ប៊ូតុង 3D ថ្លាដូចកញ្ចក់ */
+        button.send-btn {
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+            transition: all 0.2s ease;
+        }
+        button.send-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        button.send-btn:active { transform: translateY(1px); }
+    </style>
+</head>
+<body>
+
+<!-- វីដេអូ Background ដើម -->
+<video autoplay muted loop playsinline id="bgVideo">
+    <source src="https://assets.mixkit.co/videos/preview/mixkit-stars-in-space-1610-large.mp4" type="video/mp4">
+</video>
+<img id="bgImage" style="display:none;" />
+
+<div class="chat-container">
+    <div class="header-flex">
+        <h3>Nak Ai</h3>
+        <input type="file" id="bgInput" accept="image/*,video/*" style="display: none;" onchange="loadBackground(event)">
+        <button class="glass-btn" onclick="document.getElementById('bgInput').click()">🖼️ ប្ដូរ VDO/រូប</button>
+    </div>
+
+    <div id="chatBox" class="chat-box">
+        <div class="message ai-msg">សួស្ដី! ខ្ញុំជា Nak Ai តើអ្នកចង់សួរ ឬឱ្យខ្ញុំជួយអ្វីដែរថ្ងៃនេះ?</div>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="userInput" placeholder="សរសេរសំណួរនៅទីនេះ..." onkeypress="handleKeyPress(event)">
+        <button class="send-btn" onclick="sendMessage()">បញ្ជូន</button>
+    </div>
+</div>
+
+<script>
+    // ការតភ្ជាប់ទៅកាន់ Experiential Gateway និង API Key របស់អ្នករួចជាស្រេច
+    const API_KEY = "xpl_20a191719dc275d49bc2fbc2fbec8610c1177476";
+    const BASE_URL = "https://api.experientiallabs.ai/v1/chat/completions";
+    const MODEL_ID = "gpt-6-luna";
+
+    // ការកំណត់តួនាទីខួរក្បាល AI (System Prompt) ឱ្យឆ្លើយតបបានគ្រប់កាលៈទេសៈ
+    const SYSTEM_PROMPT = "អ្នកគឺជា Nak Ai ដែលជាជំនួយការ AI ដ៏ឆ្លាតវៃបំផុត។ អ្នកអាចឆ្លើយតបបានគ្រប់សំណួរ គ្រប់ប្រធានបទ គ្រប់កាលៈទេសៈ ទាំងចំណេះដឹងទូទៅ ការសរសេរកូដ ការប្រឹក្សាយោបល់ និងការងារប្រចាំថ្ងៃ។ ត្រូវឆ្លើយតបជាភាសាខ្មែរយ៉ាងក្បោះក្បាយ រួសរាយ និងច្បាស់លាស់ (ឬឆ្លើយតាមភាសាដែលអ្នកប្រើប្រាស់សួរ)។";
+
+    let conversationHistory = [
+        { role: "system", content: SYSTEM_PROMPT }
+    ];
+
+    function loadBackground(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const fileURL = URL.createObjectURL(file);
+        const videoEl = document.getElementById('bgVideo');
+        const imgEl = document.getElementById('bgImage');
+
+        if (file.type.startsWith('video/')) {
+            imgEl.style.display = 'none';
+            videoEl.style.display = 'block';
+            videoEl.src = fileURL;
+            videoEl.play();
+        } else if (file.type.startsWith('image/')) {
+            videoEl.style.display = 'none';
+            videoEl.pause();
+            imgEl.style.display = 'block';
+            imgEl.src = fileURL;
+        }
+    }
+
+    async function sendMessage() {
+        const inputField = document.getElementById("userInput");
+        const chatBox = document.getElementById("chatBox");
+        const userText = inputField.value.trim();
+
+        if (!userText) return;
+
+        chatBox.innerHTML += `<div class="message user-msg">${userText}</div>`;
+        inputField.value = "";
+        
+        const loadingId = "loading-" + Date.now();
+        chatBox.innerHTML += `<div id="${loadingId}" class="message ai-msg">កំពុងគិត...</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        conversationHistory.push({ role: "user", content: userText });
+
+        try {
+            const response = await fetch(BASE_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: MODEL_ID,
+                    messages: conversationHistory
+                })
+            });
+
+            const data = await response.json();
+            document.getElementById(loadingId).remove();
+
+            if (data.error) {
+                chatBox.innerHTML += `<div class="message ai-msg" style="color:#ff8080;">Error: ${data.error.message}</div>`;
+                return;
+            }
+
+            const aiReply = data.choices[0].message.content;
+            conversationHistory.push({ role: "assistant", content: aiReply });
+
+            chatBox.innerHTML += `<div class="message ai-msg">${aiReply}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+        } catch (error) {
+            if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+            chatBox.innerHTML += `<div class="message ai-msg" style="color:#ff8080;">មានបញ្ហាការតភ្ជាប់អ៊ីនធឺណិត ឬ Server!</div>`;
+        }
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    }
+</script>
+
+</body>
+</html>
