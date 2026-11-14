@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090d1b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Nak Ai">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="Nak Ai — a thoughtful Khmer-speaking AI assistant.">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" type="image/png" href="icon.png">
+  <title>Nak Ai — Your thoughtful AI</title>
+  <style>
+    :root{color-scheme:dark;--ink:#f6f7ff;--muted:#a8b0c8;--line:rgba(255,255,255,.17);--glass:rgba(18,24,45,.53);--cyan:#86f4ff;--violet:#b79aff;--safe-bottom:env(safe-area-inset-bottom,0px)}
+    *{box-sizing:border-box}html,body{height:100%;margin:0}body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Khmer",sans-serif;color:var(--ink);background:#090d1b;overflow:hidden;-webkit-font-smoothing:antialiased}
+    
+    /* Animation បើកភ្នែកពេលចូលមកដំបូង */
+    .eye-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 9999;
+      pointer-events: none;
+      animation: openEye 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes openEye {
+      0% { opacity: 1; transform: scale(1.05); }
+      100% { opacity: 0; transform: scale(1); visibility: hidden; }
+    }
+
+    button,input,textarea{font:inherit}button{color:inherit}.background{position:fixed;inset:0;z-index:-3;overflow:hidden;background:radial-gradient(ellipse at 18% 18%,#182452 0,transparent 43%),radial-gradient(ellipse at 82% 80%,#271b4c 0,transparent 42%),linear-gradient(145deg,#080d1b,#10172b 55%,#090d19)}
+    .background:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,9,20,.15),rgba(5,8,18,.25) 55%,rgba(4,7,16,.55));pointer-events:none}.background video,.background img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}.background img{display:none}.aurora{position:absolute;width:70vw;height:70vw;max-width:760px;max-height:760px;border-radius:50%;filter:blur(90px);opacity:.16;animation:drift 22s ease-in-out infinite alternate;background:conic-gradient(from 180deg,#5ae8ff,#916eff,#ff80ce,#5ae8ff);left:-20%;top:8%}@keyframes drift{to{transform:translate(55vw,15vh) scale(1.15)}}
+    .app{height:100%;height:100dvh;max-width:920px;margin:auto;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(12px + var(--safe-bottom));position:relative}
+    .glass{background:var(--glass);border:1px solid var(--line);box-shadow:0 18px 55px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -1px 0 rgba(255,255,255,.035);backdrop-filter:blur(28px) saturate(155%);-webkit-backdrop-filter:blur(28px) saturate(155%)}
+    
+    .topbar{height:48px;flex:0 0 48px;display:flex;align-items:center;justify-content:flex-end;padding:0 2px;z-index:3}
+    .top-actions{display:flex;gap:8px;padding:4px;border-radius:18px;background:rgba(18,24,45,.45);border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+    .icon-btn{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);cursor:pointer;transition:.2s}.icon-btn:hover{background:rgba(255,255,255,.18);transform:translateY(-1px)}.icon-btn svg{width:19px;height:19px}
+    
+    /* ស្ថានភាពប៊ូតុងចម្រៀងពេលកំពុងលេង */
+    .icon-btn.playing {
+      border-color: rgba(134, 244, 255, 0.6);
+      background: rgba(134, 244, 255, 0.2);
+      box-shadow: 0 0 12px rgba(134, 244, 255, 0.4);
+    }
+
+    .content{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+    .messages{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px 2px 20px;scrollbar-width:thin;scrollbar-color:#ffffff2b transparent;display:flex;flex-direction:column;gap:17px}.messages:empty{display:none}.message{max-width:min(83%,660px);display:flex;flex-direction:column;gap:6px;animation:appear .25s ease both}.message.user{align-self:flex-end;align-items:flex-end}.message.assistant{align-self:flex-start}.bubble{padding:12px 15px;border-radius:18px;line-height:1.58;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}.user .bubble{border:1px solid rgba(164,237,255,.22);background:linear-gradient(145deg,rgba(55,119,153,.47),rgba(83,77,144,.47));box-shadow:0 8px 28px #06091645,inset 0 1px #ffffff20;border-bottom-right-radius:6px}.assistant .bubble{border:1px solid rgba(255,255,255,.13);background:rgba(16,22,41,.69);box-shadow:0 8px 25px #05081735,inset 0 1px #ffffff12;border-bottom-left-radius:6px}.meta{font-size:10px;color:#aab5ca;padding:0 4px}.attachments{display:flex;flex-wrap:wrap;gap:8px;margin-top:5px}.attachment{max-width:min(240px,65vw);border:1px solid #ffffff29;background:#070b16aa;border-radius:13px;overflow:hidden;box-shadow:0 7px 23px #0004}.attachment img,.attachment video{display:block;max-width:100%;max-height:260px;object-fit:contain;background:#080b14}.file-caption{font-size:10px;color:#d4def0;padding:6px 9px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.typing{display:flex;gap:5px;padding:15px 17px}.typing i{width:6px;height:6px;border-radius:50%;background:#a9eefa;animation:bop 1s infinite ease-in-out}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}@keyframes bop{50%{transform:translateY(-5px);opacity:.5}}@keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .composer-wrap{padding-top:10px;z-index:2;margin-top:auto}.composer{border-radius:24px;padding:9px 10px 9px 12px;display:flex;align-items:flex-end;gap:8px;box-shadow:0 14px 45px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.19),inset 0 -2px 4px rgba(0,0,0,.15)}.composer:focus-within{border-color:rgba(147,231,255,.42);box-shadow:0 14px 50px #0005,0 0 0 3px rgba(126,220,255,.08),inset 0 1px #ffffff22}.plus-btn,.send-btn{width:40px;height:40px;flex:0 0 40px;border-radius:15px;border:1px solid rgba(255,255,255,.15);display:grid;place-items:center;cursor:pointer;transition:.18s}.plus-btn{background:rgba(255,255,255,.075);color:#e8efff}.plus-btn:hover{background:rgba(255,255,255,.16);transform:rotate(90deg)}.plus-btn svg{width:19px}.send-btn{border:0;background:linear-gradient(145deg,#a4f5ff,#a99aff);color:#11162b;box-shadow:0 4px 16px #83ddff49}.send-btn:hover{transform:translateY(-2px);box-shadow:0 7px 20px #83ddff65}.send-btn:disabled{opacity:.45;cursor:default;transform:none}.send-btn svg{width:19px}.input-area{flex:1;min-width:0}.input-area textarea{width:100%;resize:none;outline:0;border:0;color:#f8faff;background:transparent;min-height:40px;max-height:140px;padding:10px 2px 8px;font-size:14px;line-height:1.45}.input-area textarea::placeholder{color:#a6b0c7}.pending{display:flex;gap:7px;overflow-x:auto;padding:0 3px 7px;scrollbar-width:none}.pending:empty{display:none}.pending-item{height:44px;min-width:44px;max-width:160px;display:flex;align-items:center;gap:6px;padding:4px 7px;border-radius:11px;background:#ffffff10;border:1px solid #ffffff1b;position:relative}.pending-item img{width:32px;height:32px;object-fit:cover;border-radius:7px}.pending-item .file-icon{font-size:17px}.pending-name{font-size:10px;color:#e0e6f2;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.remove-file{position:absolute;top:-5px;right:-5px;border:0;border-radius:50%;background:#343c53;color:white;width:17px;height:17px;font-size:12px;line-height:15px;padding:0;cursor:pointer}.hint{text-align:center;color:#8f9ab1;font-size:10px;padding:9px 4px 0;letter-spacing:.01em}.toast{position:absolute;z-index:8;left:50%;bottom:115px;transform:translate(-50%,10px);opacity:0;pointer-events:none;background:rgba(13,19,37,.9);border:1px solid #ffffff20;border-radius:12px;padding:10px 15px;font-size:12px;color:#edf5ff;box-shadow:0 10px 30px #0005;transition:.2s;max-width:90%;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}input[type=file]{display:none}
+    .modal-backdrop{position:fixed;inset:0;z-index:10;background:#030611a8;backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px}.modal-backdrop.open{display:flex}.modal{width:min(100%,430px);padding:21px;border-radius:24px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.modal h2{font-size:18px;margin:0}.modal p{font-size:12px;line-height:1.6;color:#b4bfd4;margin:7px 0 15px}.modal label{font-size:11px;color:#c7d0e1;display:block;margin:13px 0 7px}.modal input[type=password],.modal input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid #ffffff20;background:#070b16a8;color:white;outline:none}.modal input:focus{border-color:#91eaff77}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.action{border-radius:12px;border:1px solid #ffffff22;background:#ffffff0b;padding:10px 14px;cursor:pointer;font-size:12px}.action.primary{border:0;background:linear-gradient(135deg,#9defff,#ac9aff);color:#12172b;font-weight:700}.key-note{font-size:10px!important;color:#8f9db6!important;margin-top:10px!important}.modal-close{border:0;background:transparent;color:#b9c4d8;font-size:21px;cursor:pointer}
+    @media(min-width:700px){.app{padding-left:24px;padding-right:24px}.messages{padding-left:8px;padding-right:8px}.composer-wrap{padding-bottom:2px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <!-- Animation បើកភ្នែកពេលចូលមកដំបូង -->
+  <div class="eye-overlay"></div>
+
+  <!-- Audio Element សម្រាប់ចាក់ចម្រៀង -->
+  <audio id="bgMusic" loop></audio>
+
+  <div class="background" aria-hidden="true"><div class="aurora" id="aurora"></div><video id="backgroundVideo" autoplay muted loop playsinline></video><img id="backgroundImage" alt=""></div>
+  <div class="app">
+    <header class="topbar">
+      <div class="top-actions">
+        <!-- ប៊ូតុងរើសចម្រៀង -->
+        <input id="musicInput" type="file" accept="audio/*">
+        <button class="icon-btn" id="musicButton" aria-label="Play or select music" title="Select or toggle music" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></button>
+        
+        <!-- ប៊ូតុងប្ដូរ Background -->
+        <button class="icon-btn" id="backgroundButton" aria-label="Change background" title="Choose a background" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg></button>
+        
+        <!-- ប៊ូតុង Setting -->
+        <button class="icon-btn" id="settingsButton" aria-label="API settings" title="API settings" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.6.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.6-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.9L6.7 12l1.4-2.4 1.7.6a8 8 0 0 1 1.6-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.6.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1-.1 1.9Z" transform="translate(-2 -1)"/></svg></button>
+      </div>
+    </header>
+    <main class="content" aria-label="Chat with Nak Ai">
+      <div class="messages" id="messages" role="log" aria-live="polite" aria-relevant="additions"></div>
+    </main>
+    <div class="composer-wrap">
+      <form class="composer glass" id="chatForm">
+        <input id="attachmentInput" type="file" accept="image/*,video/*" multiple>
+        <input id="backgroundInput" type="file" accept="image/*,video/*">
+        <button class="plus-btn" id="attachButton" type="button" aria-label="Attach images or videos" title="Attach image or video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="input-area"><div class="pending" id="pending"></div><textarea id="prompt" rows="1" placeholder="Message Nak Ai…" aria-label="Message Nak Ai"></textarea></div>
+        <button class="send-btn" id="sendButton" type="submit" aria-label="Send message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 14-7-4 14-3.5-5.5L5 12Z"/><path d="m11.5 13.5 3-3"/></svg></button>
+      </form>
+      <div class="hint">Nak Ai can make mistakes. Check important information.</div>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+  <div class="modal-backdrop" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal glass"><div class="modal-head"><h2 id="settingsTitle">Connect to Nak Ai</h2><button class="modal-close" type="button" id="closeSettings" aria-label="Close">×</button></div>
+      <p>Enter an API key to send messages. Your API key is saved in your browser so you don't need to re-enter it every time.</p>
+      <label for="apiKey">Experiential API bearer token</label><input type="password" id="apiKey" placeholder="Paste your API key" autocomplete="off" spellcheck="false">
+      <p class="key-note">Configured with your default API key. You can update or clear it anytime.</p>
+      <div class="modal-actions"><button class="action" type="button" id="clearKey">Clear key</button><button class="action primary" type="button" id="saveKey">Use key</button></div>
+    </div>
+  </div>
+  <script>
+    (()=>{
+      'use strict';
+      const API_URL='https://api.experientiallabs.ai/v1/chat/completions';
+      const MODEL='gpt-6-luna';
+      const SYSTEM_PROMPT='You are Nak Ai, a helpful, polite, thoughtful, and intelligent AI assistant. Communicate fluently and naturally in Khmer when the user writes in Khmer, and respond in the language the user uses otherwise. Be clear, respectful, accurate, and concise. If uncertain, say so. Explain complex ideas accessibly and never invent facts.';
+      
+      let apiKey = localStorage.getItem('nak_ai_key') || 'xpl_20a191719dc275d49bc2fbc2fbec8610c1177476';
+      
+      let conversation=[{role:'system',content:SYSTEM_PROMPT}];
+      let queued=[];let busy=false;let bgUrl='';let musicUrl='';let toastTimer;
+      const $=id=>document.getElementById(id);
+      const messages=$('messages'),prompt=$('prompt'),pending=$('pending');
+      const bgMusic=$('bgMusic'), musicButton=$('musicButton');
+
+      function showToast(text){const t=$('toast');t.textContent=text;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3000)}
+      function scrollBottom(){messages.scrollTop=messages.scrollHeight}
+      
+      // ការគ្រប់គ្រងចម្រៀង (Music Player Logic)
+      $('musicButton').onclick = () => {
+        if (!bgMusic.src) {
+          $('musicInput').click();
+        } else {
+          if (bgMusic.paused) {
+            bgMusic.play().then(() => {
+              musicButton.classList.add('playing');
+              showToast('Music playing');
+            }).catch(() => showToast('Tap anywhere to enable audio'));
+          } else {
+            bgMusic.pause();
+            musicButton.classList.remove('playing');
+            showToast('Music paused');
+          }
+        }
+      };
+
+      $('musicButton').oncontextmenu = (e) => {
+        e.preventDefault();
+        $('musicInput').click();
+      };
+
+      $('musicInput').addEventListener('change', e => {
+        const f = e.target.files[0];
+        if (!f) return;
+        if (!f.type.startsWith('audio/')) {
+          showToast('Choose an audio file.');
+          return;
+        }
+        if (musicUrl) URL.revokeObjectURL(musicUrl);
+        musicUrl = URL.createObjectURL(f);
+        bgMusic.src = musicUrl;
+        bgMusic.play().then(() => {
+          musicButton.classList.add('playing');
+          showToast('Playing: ' + f.name);
+        }).catch(() => showToast('Auto-play blocked. Tap music button.'));
+        e.target.value = '';
+      });
+
+      // បិទចម្រៀងអូតូពេលចេញពី App (Pagehide / Visibility Change)
+      window.addEventListener('pagehide', () => {
+        if(bgMusic) bgMusic.pause();
+        if(bgUrl) URL.revokeObjectURL(bgUrl);
+        if(musicUrl) URL.revokeObjectURL(musicUrl);
+        queued.forEach(f=>URL.revokeObjectURL(f.url));
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if(bgMusic) bgMusic.pause();
+          musicButton.classList.remove('playing');
+        }
+      });
+
+      function addMessage(role,text,files=[]){
+        const row=document.createElement('article');row.className='message '+role;
+        if(text){const bubble=document.createElement('div');bubble.className='bubble';bubble.textContent=text;row.appendChild(bubble)}
+        if(files.length){const tray=document.createElement('div');tray.className='attachments';files.forEach(f=>{const card=document.createElement('div');card.className='attachment';if(f.type.startsWith('image/')){const im=document.createElement('img');im.src=f.url;im.alt=f.name;card.appendChild(im)}else if(f.type.startsWith('video/')){const v=document.createElement('video');v.src=f.url;v.controls=true;v.playsInline=true;card.appendChild(v)}const cap=document.createElement('div');cap.className='file-caption';cap.textContent=f.name;card.appendChild(cap);tray.appendChild(card)});row.appendChild(tray)}
+        const meta=document.createElement('div');meta.className='meta';meta.textContent=role==='user'?'You':'Nak Ai';row.appendChild(meta);messages.appendChild(row);scrollBottom();return row;
+      }
+      function addTyping(){const row=document.createElement('article');row.className='message assistant';row.id='typingIndicator';const dots=document.createElement('div');dots.className='bubble typing';dots.innerHTML='<i></i><i></i><i></i>';row.appendChild(dots);messages.appendChild(row);scrollBottom()}
+      function resizeInput(){prompt.style.height='auto';prompt.style.height=Math.min(prompt.scrollHeight,140)+'px'}
+      function renderPending(){pending.replaceChildren();queued.forEach((file,index)=>{const chip=document.createElement('div');chip.className='pending-item';if(file.type.startsWith('image/')){const im=document.createElement('img');im.src=file.url;im.alt='';chip.appendChild(im)}else{const ico=document.createElement('span');ico.className='file-icon';ico.textContent='▶';chip.appendChild(ico)}const name=document.createElement('span');name.className='pending-name';name.textContent=file.name;chip.appendChild(name);const remove=document.createElement('button');remove.type='button';remove.className='remove-file';remove.textContent='×';remove.setAttribute('aria-label','Remove '+file.name);remove.onclick=()=>{URL.revokeObjectURL(file.url);queued.splice(index,1);renderPending()};chip.appendChild(remove);pending.appendChild(chip)})}
+      $('attachButton').onclick=()=>$('attachmentInput').click();
+      $('attachmentInput').addEventListener('change',e=>{const files=[...e.target.files];files.forEach(f=>{if(!f.type.startsWith('image/')&&!f.type.startsWith('video/'))return;queued.push({file:f,name:f.name,type:f.type,url:URL.createObjectURL(f)})});renderPending();e.target.value='';if(files.length)prompt.focus()});
+      prompt.addEventListener('input',resizeInput);prompt.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('chatForm').requestSubmit()}});
+      $('backgroundButton').onclick=()=>$('backgroundInput').click();
+      $('backgroundInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;if(!f.type.startsWith('image/')&&!f.type.startsWith('video/')){showToast('Choose an image or video file.');return}if(bgUrl)URL.revokeObjectURL(bgUrl);bgUrl=URL.createObjectURL(f);const video=$('backgroundVideo'),image=$('backgroundImage');video.pause();video.removeAttribute('src');video.load();image.style.display='none';video.style.display='none';if(f.type.startsWith('video/')){video.src=bgUrl;video.style.display='block';video.play().catch(()=>showToast('Tap to play this background video.'))}else{image.src=bgUrl;image.style.display='block'}$('aurora').style.display='none';showToast('Background updated');e.target.value=''});
+      
+      $('settingsButton').onclick=()=>{$('settingsModal').classList.add('open');$('apiKey').value=apiKey;$('apiKey').focus()};
+      $('closeSettings').onclick=()=>$('settingsModal').classList.remove('open');
+      $('settingsModal').addEventListener('click',e=>{if(e.target===$('settingsModal'))$('settingsModal').classList.remove('open')});
+      
+      $('saveKey').onclick=()=>{
+        apiKey=$('apiKey').value.trim();
+        if(apiKey){
+          localStorage.setItem('nak_ai_key', apiKey);
+        } else {
+          localStorage.removeItem('nak_ai_key');
+        }
+        $('settingsModal').classList.remove('open');
+        showToast(apiKey?'API key saved successfully!':'API key cleared');
+      };
+      
+      $('clearKey').onclick=()=>{apiKey='';localStorage.removeItem('nak_ai_key');$('apiKey').value='';showToast('API key cleared')};
+      
+      function fileToDataURL(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}
+      function compressImage(src,type,maxSide=1600){return new Promise(resolve=>{const im=new Image();im.onload=()=>{const scale=Math.min(1,maxSide/Math.max(im.naturalWidth,im.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(im.naturalWidth*scale);c.height=Math.round(im.naturalHeight*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.82))};im.onerror=()=>resolve(src);im.src=src})}
+      function videoFrame(file){return new Promise(resolve=>{const u=URL.createObjectURL(file),v=document.createElement('video');let done=false;const finish=async data=>{if(done)return;done=true;URL.revokeObjectURL(u);resolve(data)};v.muted=true;v.preload='metadata';v.onloadeddata=()=>{try{const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);finish(c.toDataURL('image/jpeg',.78))}catch{finish(null)}};v.onerror=()=>finish(null);v.src=u;v.load();setTimeout(()=>finish(null),5000)})}
+      async function buildUserContent(text,files){const parts=[];let intro=text||'';const videos=files.filter(f=>f.type.startsWith('video/'));if(videos.length){const names=videos.map(f=>f.name).join(', ');intro+=(intro?'\n\n':'')+'Attached video clip(s): '+names+'. A representative frame may be included; the clip itself is available in the chat UI but is not sent as full video to this chat endpoint.'}if(intro)parts.push({type:'text',text:intro});for(const f of files){if(f.type.startsWith('image/')){const data=await fileToDataURL(f.file);parts.push({type:'image_url',image_url:{url:await compressImage(data,f.type)}})}else if(f.type.startsWith('video/')){const frame=await videoFrame(f.file);if(frame)parts.push({type:'text',text:'Representative frame from video '+f.name+':'},{type:'image_url',image_url:{url:frame}})}}return parts.length?parts:[{type:'text',text:' '}]}
+      
+      $('chatForm').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;const text=prompt.value.trim(),files=queued.slice();if(!text&&!files.length)return;if(!apiKey){$('settingsModal').classList.add('open');showToast('Add your Experiential API key to send a message');$('apiKey').focus();return}
+        busy=true;$('sendButton').disabled=true;const displayFiles=files.map(f=>({name:f.name,type:f.type,url:f.url}));addMessage('user',text,displayFiles);prompt.value='';resizeInput();queued=[];renderPending();addTyping();
+        try{const content=await buildUserContent(text,files);conversation.push({role:'user',content});const response=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model:MODEL,messages:conversation,temperature:.7})});let data;try{data=await response.json()}catch{throw new Error('The API returned an unreadable response.')}if(!response.ok)throw new Error(data?.error?.message||'Request failed ('+response.status+'). Check your API key and gateway access.');const answer=data?.choices?.[0]?.message?.content;if(typeof answer!=='string'||!answer.trim())throw new Error('The API returned an empty response.');conversation.push({role:'assistant',content:answer});$('typingIndicator')?.remove();addMessage('assistant',answer)}catch(err){$('typingIndicator')?.remove();addMessage('assistant','Sorry — I couldn’t complete that request. '+(err.message||'Please try again.'));showToast(err.message||'Request failed')}finally{busy=false;$('sendButton').disabled=false;prompt.focus()}
+      });
+    })();
+  </script>
+</body>
+</html>
