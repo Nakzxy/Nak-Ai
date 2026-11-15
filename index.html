@@ -1,0 +1,241 @@
+បាន។ ខ្ញុំនឹងកែតែ **background និងរូបរាងផ្ទាំង UI** ប៉ុណ្ណោះ។ ផ្នែក **ចម្រៀង, API key, chat និង settings ទុកដូចកូដដើម**។
+
+### ១. កែ CSS
+
+បន្ថែមកូដនេះនៅ **ចុងក្រោយក្នុង `<style>` មុន `</style>`**៖
+
+```css
+/* Background នៅថេរ មិនទទួលការអូស/ចុច ហើយមិនគ្របដណ្ដប់លើ UI */
+.background {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  touch-action: none;
+  transform: none;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+}
+
+/* កុំឱ្យស្រទាប់ងងឹតបន្ថយពន្លឺវីដេអូ */
+.background:after {
+  background: transparent;
+  pointer-events: none;
+}
+
+.background video,
+.background img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  position: absolute;
+  inset: 0;
+  opacity: 1;
+  filter: none;
+  pointer-events: none;
+}
+
+/* ផ្ទាំងថ្លាដូចកញ្ចក់ និងមានស្រមោលឱ្យមើលទៅលេចឡើង */
+.glass {
+  background: rgba(20, 27, 48, .32);
+  border: 1px solid rgba(255, 255, 255, .32);
+  box-shadow:
+    0 20px 55px rgba(0, 0, 0, .30),
+    inset 0 1px 0 rgba(255, 255, 255, .30),
+    inset 0 -1px 0 rgba(255, 255, 255, .07);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+.user .bubble,
+.assistant .bubble {
+  background: rgba(20, 27, 48, .38);
+  border: 1px solid rgba(255, 255, 255, .24);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, .25),
+    inset 0 1px 0 rgba(255, 255, 255, .16);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+/* លាក់ controls របស់វីដេអូ background */
+#backgroundVideo::-webkit-media-controls,
+#backgroundVideo::-webkit-media-controls-enclosure,
+#backgroundVideo::-webkit-media-controls-panel {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
+html,
+body {
+  overscroll-behavior: none;
+}
+```
+
+### ២. ប្ដូរ background input handler
+
+ក្នុង `<script>` រកផ្នែកចាស់នេះ៖
+
+```js
+$('backgroundButton').onclick=()=>$('backgroundInput').click();
+$('backgroundInput').addEventListener('change',e=>{ ... });
+```
+
+លុបផ្នែកនោះ ហើយដាក់កូដខាងក្រោមជំនួស៖
+
+```js
+$('backgroundButton').onclick = () => $('backgroundInput').click();
+
+const BG_DB_NAME = 'nak-ai-background';
+const BG_STORE_NAME = 'selected-background';
+
+function openBackgroundDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(BG_DB_NAME, 1);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(BG_STORE_NAME)) {
+        db.createObjectStore(BG_STORE_NAME);
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveBackgroundFile(file) {
+  const db = await openBackgroundDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BG_STORE_NAME, 'readwrite');
+    tx.objectStore(BG_STORE_NAME).put(file, 'background');
+    tx.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
+  });
+}
+
+async function loadBackgroundFile() {
+  const db = await openBackgroundDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BG_STORE_NAME, 'readonly');
+    const request = tx.objectStore(BG_STORE_NAME).get('background');
+
+    request.onsuccess = () => {
+      db.close();
+      resolve(request.result || null);
+    };
+    request.onerror = () => {
+      db.close();
+      reject(request.error);
+    };
+  });
+}
+
+function setBackgroundFile(file, save = true) {
+  if (bgUrl) URL.revokeObjectURL(bgUrl);
+  bgUrl = URL.createObjectURL(file);
+
+  const video = $('backgroundVideo');
+  const image = $('backgroundImage');
+
+  video.pause();
+  video.removeAttribute('src');
+  video.removeAttribute('controls');
+  video.load();
+  image.removeAttribute('src');
+
+  const isVideo =
+    file.type.startsWith('video/') ||
+    /\.(mp4|mov|m4v|webm|ogv)$/i.test(file.name);
+
+  if (isVideo) {
+    image.style.display = 'none';
+    video.style.display = 'block';
+    video.src = bgUrl;
+    video.autoplay = true;
+    video.muted = true;
+    video.loop = true;
+    video.controls = false;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.setAttribute('muted', '');
+    video.load();
+
+    // វីដេអូ muted អាច autoplay បានក្នុង browser ភាគច្រើន
+    video.play().catch(() => {
+      showToast('Browser មិនអនុញ្ញាតឱ្យចាក់វីដេអូដោយស្វ័យប្រវត្តិទេ។');
+    });
+  } else {
+    video.style.display = 'none';
+    image.src = bgUrl;
+    image.style.display = 'block';
+  }
+
+  $('aurora').style.display = 'none';
+
+  if (save) {
+    saveBackgroundFile(file).catch(() => {
+      showToast('មិនអាចរក្សាទុក Background សម្រាប់ពេលក្រោយបានទេ។');
+    });
+  }
+}
+
+$('backgroundInput').addEventListener('change', event => {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+
+  const isVideo =
+    file.type.startsWith('video/') ||
+    /\.(mp4|mov|m4v|webm|ogv)$/i.test(file.name);
+
+  const isImage =
+    file.type.startsWith('image/') ||
+    /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(file.name);
+
+  if (!isVideo && !isImage) {
+    showToast('Choose an image or video file.');
+    return;
+  }
+
+  setBackgroundFile(file);
+  showToast('Background updated');
+});
+
+// ពេលបើក app ឡើងវិញ ស្ដារ Background ដែលបានជ្រើសពីមុន
+(async () => {
+  try {
+    const savedFile = await loadBackgroundFile();
+    if (savedFile) setBackgroundFile(savedFile, false);
+  } catch (error) {
+    console.warn('Could not restore background:', error);
+  }
+})();
+
+// ព្យាយាមបន្តចាក់វីដេអូពេលត្រឡប់មក app វិញ
+document.addEventListener('visibilitychange', () => {
+  const video = $('backgroundVideo');
+
+  if (!document.hidden && video.src) {
+    video.play().catch(() => {});
+  }
+});
+```
